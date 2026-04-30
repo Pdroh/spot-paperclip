@@ -40,6 +40,14 @@ interface MenuActionProps {
   external?: boolean;
 }
 
+interface ThemeOptionProps {
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  active: boolean;
+  onClick: () => void;
+}
+
 function deriveInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
@@ -101,6 +109,30 @@ function MenuAction({ label, description, icon: Icon, onClick, href, external = 
   );
 }
 
+function ThemeOption({ label, description, icon: Icon, active, onClick }: ThemeOptionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors",
+        active
+          ? "border-foreground/30 bg-accent/70"
+          : "border-border bg-background/60 hover:bg-accent/40",
+      )}
+    >
+      <span className="mt-0.5 rounded-lg border border-border bg-background/70 p-2 text-muted-foreground">
+        <Icon className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-foreground">{label}</span>
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+    </button>
+  );
+}
+
 export function SidebarAccountMenu({
   deploymentMode,
   instanceSettingsTarget,
@@ -111,7 +143,7 @@ export function SidebarAccountMenu({
   const [internalOpen, setInternalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isMobile, setSidebarOpen } = useSidebar();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
   const { data: session } = useQuery({
@@ -160,7 +192,7 @@ export function SidebarAccountMenu({
           side="top"
           align="start"
           sideOffset={10}
-          className="w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-t-2xl rounded-b-none border-border p-0 shadow-2xl"
+          className="w-(--radix-popover-trigger-width) overflow-hidden rounded-t-2xl rounded-b-none border-border p-0 shadow-2xl"
         >
           <div className="h-24 bg-[linear-gradient(135deg,hsl(var(--primary))_0%,hsl(var(--accent))_55%,hsl(var(--muted))_100%)]" />
           <div className="-mt-8 px-4 pb-4">
@@ -215,15 +247,32 @@ export function SidebarAccountMenu({
                 external
                 onClick={() => setOpen(false)}
               />
-              <MenuAction
-                label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                description="Toggle the app appearance."
-                icon={theme === "dark" ? Sun : Moon}
-                onClick={() => {
-                  toggleTheme();
-                  setOpen(false);
-                }}
-              />
+              <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
+                <p className="mt-1 text-xs text-muted-foreground">Light mode is the default for easier reading. You can switch anytime.</p>
+                <div className="mt-3 space-y-2">
+                  <ThemeOption
+                    label="Light mode"
+                    description="High clarity for day-to-day use."
+                    icon={Sun}
+                    active={theme === "light"}
+                    onClick={() => {
+                      setTheme("light");
+                      setOpen(false);
+                    }}
+                  />
+                  <ThemeOption
+                    label="Dark mode"
+                    description="Reduced glare in low-light environments."
+                    icon={Moon}
+                    active={theme === "dark"}
+                    onClick={() => {
+                      setTheme("dark");
+                      setOpen(false);
+                    }}
+                  />
+                </div>
+              </div>
               {deploymentMode === "authenticated" ? (
                 <button
                   type="button"
