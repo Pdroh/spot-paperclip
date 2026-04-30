@@ -516,6 +516,16 @@ export type {
   QuotaWindow,
   ProviderQuotaResult,
 } from "./types/index.js";
+export type {
+  ProjectMembershipRole,
+  ProjectMembershipStatus,
+  ProjectMembership,
+  ProjectMembershipWithUser,
+  ProjectAgentAssignment,
+  ProjectAgentAssignmentWithAgent,
+} from "./types/project-access.js";
+export type { ProjectSkill, ProjectSkillListItem } from "./types/project-skill.js";
+export type { UserAdapterCredential } from "./types/user-adapter-credential.js";
 export {
   ISSUE_REFERENCE_IDENTIFIER_RE,
   buildIssueReferenceHref,
@@ -875,6 +885,28 @@ export {
   type SetPluginState,
   type ListPluginState,
 } from "./validators/index.js";
+export {
+  projectMembershipRoleSchema,
+  createProjectMembershipSchema,
+  updateProjectMembershipSchema,
+  type CreateProjectMembership,
+  type UpdateProjectMembership,
+  createProjectAgentAssignmentSchema,
+  type CreateProjectAgentAssignment,
+} from "./validators/project-access.js";
+export {
+  projectSkillSchema,
+  projectSkillListItemSchema,
+  createProjectSkillSchema,
+  updateProjectSkillSchema,
+  type CreateProjectSkill,
+  type UpdateProjectSkill,
+} from "./validators/project-skill.js";
+export {
+  userAdapterCredentialSchema,
+  upsertUserAdapterCredentialSchema,
+  type UpsertUserAdapterCredential,
+} from "./validators/user-adapter-credential.js";
 
 export { API_PREFIX, API } from "./api.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";

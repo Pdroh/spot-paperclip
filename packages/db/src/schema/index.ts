@@ -71,3 +71,7 @@ export { pluginDatabaseNamespaces, pluginMigrations } from "./plugin_database.js
 export { pluginJobs, pluginJobRuns } from "./plugin_jobs.js";
 export { pluginWebhookDeliveries } from "./plugin_webhooks.js";
 export { pluginLogs } from "./plugin_logs.js";
+export { projectMemberships } from "./project_memberships.js";
+export { projectAgentAssignments } from "./project_agent_assignments.js";
+export { projectSkills } from "./project_skills.js";
+export { userAdapterCredentials } from "./user_adapter_credentials.js";

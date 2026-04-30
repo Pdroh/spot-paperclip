@@ -173,4 +173,16 @@ export const queryKeys = {
   adapters: {
     all: ["adapters"] as const,
   },
+  projectMembers: {
+    list: (companyId: string, projectId: string) => ["project-members", companyId, projectId] as const,
+  },
+  projectAgents: {
+    list: (companyId: string, projectId: string) => ["project-agents", companyId, projectId] as const,
+  },
+  projectSkills: {
+    list: (companyId: string, projectId: string) => ["project-skills", companyId, projectId] as const,
+  },
+  userCredentials: {
+    list: ["user-credentials"] as const,
+  },
 };

@@ -30,10 +30,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import { PluginLauncherOutlet } from "@/plugins/launchers";
 import { PluginSlotMount, PluginSlotOutlet, usePluginSlots } from "@/plugins/slots";
+import { ProjectMembersTab } from "../components/ProjectMembersTab";
+import { ProjectAgentsTab } from "../components/ProjectAgentsTab";
+import { ProjectSkillsTab } from "../components/ProjectSkillsTab";
+import { accessApi } from "../api/access";
 
 /* ── Top-level tab types ── */
 
-type ProjectBaseTab = "overview" | "list" | "workspaces" | "configuration" | "budget";
+type ProjectBaseTab = "overview" | "list" | "workspaces" | "configuration" | "budget" | "members" | "agents" | "project-skills";
 type ProjectPluginTab = `plugin:${string}`;
 type ProjectTab = ProjectBaseTab | ProjectPluginTab;
 
@@ -51,6 +55,9 @@ function resolveProjectTab(pathname: string, projectId: string): ProjectTab | nu
   if (tab === "budget") return "budget";
   if (tab === "issues") return "list";
   if (tab === "workspaces") return "workspaces";
+  if (tab === "members") return "members";
+  if (tab === "agents") return "agents";
+  if (tab === "project-skills") return "project-skills";
   return null;
 }
 
@@ -271,6 +278,11 @@ export function ProjectDetail() {
     [pluginDetailSlots],
   );
   const activePluginTab = pluginTabItems.find((item) => item.value === activeTab) ?? null;
+
+  const boardAccessQuery = useQuery({
+    queryKey: queryKeys.access.currentBoardAccess,
+    queryFn: () => accessApi.getCurrentBoardAccess(),
+  });
   const isolatedWorkspacesEnabled = experimentalSettingsQuery.data?.enableIsolatedWorkspaces === true;
   const workspaceTabProjectId = project?.id ?? null;
   const { data: workspaceTabIssues = [], isLoading: isWorkspaceTabIssuesLoading, error: workspaceTabIssuesError } = useQuery({
@@ -388,6 +400,18 @@ export function ProjectDetail() {
     }
     if (activeTab === "budget") {
       navigate(`/projects/${canonicalProjectRef}/budget`, { replace: true });
+      return;
+    }
+    if (activeTab === "members") {
+      navigate(`/projects/${canonicalProjectRef}/members`, { replace: true });
+      return;
+    }
+    if (activeTab === "agents") {
+      navigate(`/projects/${canonicalProjectRef}/agents`, { replace: true });
+      return;
+    }
+    if (activeTab === "project-skills") {
+      navigate(`/projects/${canonicalProjectRef}/project-skills`, { replace: true });
       return;
     }
     if (activeTab === "workspaces") {
@@ -529,6 +553,15 @@ export function ProjectDetail() {
     if (cachedTab === "workspaces" && !workspaceTabDecisionLoaded) {
       return <PageSkeleton variant="detail" />;
     }
+    if (cachedTab === "members") {
+      return <Navigate to={`/projects/${canonicalProjectRef}/members`} replace />;
+    }
+    if (cachedTab === "agents") {
+      return <Navigate to={`/projects/${canonicalProjectRef}/agents`} replace />;
+    }
+    if (cachedTab === "project-skills") {
+      return <Navigate to={`/projects/${canonicalProjectRef}/project-skills`} replace />;
+    }
     if (isProjectPluginTab(cachedTab)) {
       return <Navigate to={`/projects/${canonicalProjectRef}?tab=${encodeURIComponent(cachedTab)}`} replace />;
     }
@@ -538,6 +571,10 @@ export function ProjectDetail() {
   if (isLoading) return <PageSkeleton variant="detail" />;
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;
   if (!project) return null;
+
+  const boardAccess = boardAccessQuery.data;
+  const isPrivileged = boardAccess?.source === "local_implicit" || boardAccess?.isInstanceAdmin;
+  const canManageProject = isPrivileged || false; // will be updated when membership data loads
 
   const handleTabChange = (tab: ProjectTab) => {
     // Cache the active tab per project
@@ -556,6 +593,12 @@ export function ProjectDetail() {
       navigate(`/projects/${canonicalProjectRef}/budget`);
     } else if (tab === "configuration") {
       navigate(`/projects/${canonicalProjectRef}/configuration`);
+    } else if (tab === "members") {
+      navigate(`/projects/${canonicalProjectRef}/members`);
+    } else if (tab === "agents") {
+      navigate(`/projects/${canonicalProjectRef}/agents`);
+    } else if (tab === "project-skills") {
+      navigate(`/projects/${canonicalProjectRef}/project-skills`);
     } else {
       navigate(`/projects/${canonicalProjectRef}/issues`);
     }
@@ -625,6 +668,9 @@ export function ProjectDetail() {
             ...(showWorkspacesTab ? [{ value: "workspaces", label: "Workspaces" }] : []),
             { value: "configuration", label: "Configuration" },
             { value: "budget", label: "Budget" },
+            { value: "members", label: "Membros" },
+            { value: "agents", label: "Agentes" },
+            { value: "project-skills", label: "Skills" },
             ...pluginTabItems.map((item) => ({
               value: item.value,
               label: item.label,
@@ -690,6 +736,30 @@ export function ProjectDetail() {
             onSave={(amount) => budgetMutation.mutate(amount)}
           />
         </div>
+      ) : null}
+
+      {activeTab === "members" && project?.id && resolvedCompanyId ? (
+        <ProjectMembersTab
+          companyId={resolvedCompanyId}
+          projectId={project.id}
+          canManage={canManageProject}
+        />
+      ) : null}
+
+      {activeTab === "agents" && project?.id && resolvedCompanyId ? (
+        <ProjectAgentsTab
+          companyId={resolvedCompanyId}
+          projectId={project.id}
+          canManage={canManageProject}
+        />
+      ) : null}
+
+      {activeTab === "project-skills" && project?.id && resolvedCompanyId ? (
+        <ProjectSkillsTab
+          companyId={resolvedCompanyId}
+          projectId={project.id}
+          canManage={canManageProject}
+        />
       ) : null}
 
       {activePluginTab && (

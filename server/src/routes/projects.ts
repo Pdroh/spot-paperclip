@@ -16,6 +16,7 @@ import { validate } from "../middleware/validate.js";
 import { projectService, logActivity, workspaceOperationService } from "../services/index.js";
 import { conflict, forbidden } from "../errors.js";
 import { assertCompanyAccess, getActorInfo } from "./authz.js";
+import { projectMembershipService } from "../services/project-memberships.js";
 import {
   buildWorkspaceRuntimeDesiredStatePatch,
   listConfiguredRuntimeServiceEntries,
@@ -100,7 +101,18 @@ export function projectRoutes(db: Db) {
   router.get("/companies/:companyId/projects", async (req, res) => {
     const companyId = req.params.companyId as string;
     assertCompanyAccess(req, companyId);
-    const result = await svc.list(companyId);
+    let result = await svc.list(companyId);
+    // Apply project whitelist for non-admin board users.
+    const actor = req.actor;
+    const isPrivileged =
+      actor.source === "local_implicit" ||
+      actor.isInstanceAdmin ||
+      actor.type === "agent";
+    if (!isPrivileged && actor.type === "board" && actor.userId) {
+      const memberSvc = projectMembershipService(db);
+      const allowedIds = new Set(await memberSvc.getUserProjectIds(actor.userId));
+      result = result.filter((p) => allowedIds.has(p.id));
+    }
     res.json(result);
   });
 

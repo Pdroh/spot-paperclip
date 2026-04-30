@@ -1,5 +1,8 @@
 import type { Request } from "express";
 import { forbidden, unauthorized } from "../errors.js";
+import type { Db } from "@paperclipai/db";
+import { projectMemberships } from "@paperclipai/db";
+import { and, eq } from "drizzle-orm";
 
 export function assertAuthenticated(req: Request) {
   if (req.actor.type === "none") {
@@ -80,4 +83,67 @@ export function getActorInfo(req: Request) {
     agentId: null,
     runId: req.actor.runId ?? null,
   };
+}
+
+/**
+ * Asserts that the current board user has access to the given project.
+ * - Instance admins bypass the check.
+ * - Agents are not restricted by project membership (they're restricted via project_agent_assignments).
+ * - Board users must have an active membership in the project.
+ */
+export async function assertProjectAccess(req: Request, projectId: string, db: Db): Promise<void> {
+  assertAuthenticated(req);
+
+  // Agents are not checked here — their project scoping is handled separately.
+  if (req.actor.type === "agent") return;
+
+  // Instance admins and local board have full access.
+  if (req.actor.source === "local_implicit" || req.actor.isInstanceAdmin) return;
+
+  const userId = req.actor.userId;
+  if (!userId) throw forbidden("Board authentication required");
+
+  const membership = await db
+    .select({ role: projectMemberships.role })
+    .from(projectMemberships)
+    .where(
+      and(
+        eq(projectMemberships.projectId, projectId),
+        eq(projectMemberships.userId, userId),
+        eq(projectMemberships.status, "active"),
+      ),
+    )
+    .then((rows) => rows[0] ?? null);
+
+  if (!membership) {
+    throw forbidden("User does not have access to this project");
+  }
+}
+
+/**
+ * Asserts that the current board user is an owner of the project (or instance admin).
+ */
+export async function assertProjectOwner(req: Request, projectId: string, db: Db): Promise<void> {
+  assertAuthenticated(req);
+  if (req.actor.type !== "board") throw forbidden("Board access required");
+  if (req.actor.source === "local_implicit" || req.actor.isInstanceAdmin) return;
+
+  const userId = req.actor.userId;
+  if (!userId) throw forbidden("Board authentication required");
+
+  const membership = await db
+    .select({ role: projectMemberships.role })
+    .from(projectMemberships)
+    .where(
+      and(
+        eq(projectMemberships.projectId, projectId),
+        eq(projectMemberships.userId, userId),
+        eq(projectMemberships.status, "active"),
+      ),
+    )
+    .then((rows) => rows[0] ?? null);
+
+  if (!membership || membership.role !== "owner") {
+    throw forbidden("Project owner access required");
+  }
 }

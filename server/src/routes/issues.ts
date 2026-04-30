@@ -56,6 +56,7 @@ import {
   routineService,
   workProductService,
 } from "../services/index.js";
+import { projectAgentAssignmentService } from "../services/project-agent-assignments.js";
 import { logger } from "../middleware/logger.js";
 import { conflict, forbidden, HttpError, notFound, unauthorized } from "../errors.js";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
@@ -962,6 +963,12 @@ export function issueRoutes(
       inboxArchivedByUserId,
       unreadForUserId,
       projectId: req.query.projectId as string | undefined,
+      // Scope issues to assigned projects when the actor is an agent with assignments.
+      projectIds: await (async () => {
+        if (req.actor.type !== "agent" || !req.actor.agentId) return undefined;
+        const agentProjectIds = await projectAgentAssignmentService(db).getAgentProjectIds(req.actor.agentId);
+        return agentProjectIds.length > 0 ? agentProjectIds : undefined;
+      })(),
       workspaceId: req.query.workspaceId as string | undefined,
       executionWorkspaceId: req.query.executionWorkspaceId as string | undefined,
       parentId: req.query.parentId as string | undefined,

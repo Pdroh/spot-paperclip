@@ -18,3 +18,7 @@ export { sidebarBadgesApi } from "./sidebarBadges";
 export { sidebarPreferencesApi } from "./sidebarPreferences";
 export { inboxDismissalsApi } from "./inboxDismissals";
 export { companySkillsApi } from "./companySkills";
+export { projectMembersApi } from "./projectMembers";
+export { projectAgentsApi } from "./projectAgents";
+export { projectSkillsApi } from "./projectSkills";
+export { userCredentialsApi } from "./userCredentials";

@@ -342,6 +342,33 @@ export {
 } from "./access.js";
 
 export {
+  projectMembershipRoleSchema,
+  projectMembershipStatusSchema,
+  projectMembershipSchema,
+  projectMembershipWithUserSchema,
+  createProjectMembershipSchema,
+  updateProjectMembershipSchema,
+  projectAgentAssignmentSchema,
+  projectAgentAssignmentWithAgentSchema,
+  createProjectAgentAssignmentSchema,
+  type CreateProjectMembership,
+  type UpdateProjectMembership,
+  type CreateProjectAgentAssignment,
+} from "./project-access.js";
+export {
+  projectSkillSchema,
+  projectSkillListItemSchema,
+  createProjectSkillSchema,
+  updateProjectSkillSchema,
+  type CreateProjectSkill,
+  type UpdateProjectSkill,
+} from "./project-skill.js";
+export {
+  userAdapterCredentialSchema,
+  upsertUserAdapterCredentialSchema,
+  type UpsertUserAdapterCredential,
+} from "./user-adapter-credential.js";
+export {
   jsonSchemaSchema,
   pluginJobDeclarationSchema,
   pluginWebhookDeclarationSchema,

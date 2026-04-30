@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UserCredentialsSection } from "../components/UserCredentialsSection";
 
 function deriveInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -268,6 +269,10 @@ export function ProfileSettings() {
           </div>
         </form>
       </section>
+
+      <div className="border-t border-border pt-6">
+        <UserCredentialsSection />
+      </div>
     </div>
   );
 }

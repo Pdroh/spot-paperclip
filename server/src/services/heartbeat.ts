@@ -48,6 +48,7 @@ import { getTelemetryClient } from "../telemetry.js";
 import { companySkillService } from "./company-skills.js";
 import { budgetService, type BudgetEnforcementScope } from "./budgets.js";
 import { secretService } from "./secrets.js";
+import { userAdapterCredentialService } from "./user-adapter-credentials.js";
 import { resolveDefaultAgentWorkspaceDir, resolveManagedProjectWorkspaceDir } from "../home-paths.js";
 import {
   buildHeartbeatRunIssueComment,
@@ -5435,6 +5436,24 @@ export function heartbeatService(db: Db, options: HeartbeatServiceOptions = {}) 
           (entry): entry is [string, string] => typeof entry[0] === "string" && typeof entry[1] === "string",
         ),
       );
+      // Inject per-user Claude API key when a board user triggered this run.
+      if (run.wakeupRequestId) {
+        const wakeupRequest = await db
+          .select({
+            requestedByActorType: agentWakeupRequests.requestedByActorType,
+            requestedByActorId: agentWakeupRequests.requestedByActorId,
+          })
+          .from(agentWakeupRequests)
+          .where(eq(agentWakeupRequests.id, run.wakeupRequestId))
+          .then((rows) => rows[0] ?? null);
+        if (wakeupRequest?.requestedByActorType === "user" && wakeupRequest.requestedByActorId) {
+          const credSvc = userAdapterCredentialService(db);
+          const userApiKey = await credSvc.resolveApiKey(wakeupRequest.requestedByActorId, agent.adapterType).catch(() => null);
+          if (userApiKey) {
+            adapterEnv["ANTHROPIC_API_KEY"] = userApiKey;
+          }
+        }
+      }
       const runtimeServices = await ensureRuntimeServicesForRun({
         db,
         runId: run.id,

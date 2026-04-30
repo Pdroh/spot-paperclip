@@ -306,6 +306,16 @@ export type {
   CompanyPortabilityExportRequest,
 } from "./company-portability.js";
 export type {
+  ProjectMembershipRole,
+  ProjectMembershipStatus,
+  ProjectMembership,
+  ProjectMembershipWithUser,
+  ProjectAgentAssignment,
+  ProjectAgentAssignmentWithAgent,
+} from "./project-access.js";
+export type { ProjectSkill, ProjectSkillListItem } from "./project-skill.js";
+export type { UserAdapterCredential } from "./user-adapter-credential.js";
+export type {
   JsonSchema,
   PluginJobDeclaration,
   PluginWebhookDeclaration,

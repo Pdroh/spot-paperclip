@@ -100,6 +100,7 @@ export interface IssueFilters {
   inboxArchivedByUserId?: string;
   unreadForUserId?: string;
   projectId?: string;
+  projectIds?: string[];
   workspaceId?: string;
   executionWorkspaceId?: string;
   parentId?: string;
@@ -2154,6 +2155,9 @@ export function issueService(db: Db) {
         conditions.push(unreadForUserCondition(companyId, unreadForUserId));
       }
       if (filters?.projectId) conditions.push(eq(issues.projectId, filters.projectId));
+      if (filters?.projectIds && filters.projectIds.length > 0) {
+        conditions.push(inArray(issues.projectId, filters.projectIds));
+      }
       if (filters?.workspaceId) {
         conditions.push(or(
           eq(issues.executionWorkspaceId, filters.workspaceId),
